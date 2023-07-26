@@ -23,6 +23,19 @@ Reading an analog value with the ESP32 means you can measure varying voltage lev
 https://github.com/Savjee/home-energy-monitor
 https://savjee.be/blog/Home-Energy-Monitor-ESP32-CT-Sensor-Emonlib/
 
+https://github.com/olehs/PZEM004T  // ESP32 LIB for Modbus serial ??
+https://github.com/mandulaj/PZEM-004T-v30 // ESP32 LIB for Modbus serial 
+https://github.com/vortigont/pzem-edl/tree/main >// Complex variant Modbus and 3.3V Hack for ESP32 !!!!!!!!!
+
+
+https://tasmota.github.io/docs/PZEM-0XX/#pzem-004t-version-v3_1  // Different V3.3 Mods for V1.0 and V3.0 !!!!!!!!!!!!!!!!!!!!!!!!!!!
+https://github.com/arendst/Tasmota/issues/9518 // explanation !
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+FIRST TRY IT WITHOUT MODIFICATION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 
 // the setup function runs once when you press reset or power the board
 void setup()
