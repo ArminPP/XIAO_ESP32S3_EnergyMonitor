@@ -21,6 +21,8 @@ Reading an analog value with the ESP32 means you can measure varying voltage lev
 
 
 https://github.com/Savjee/home-energy-monitor
+https://savjee.be/blog/Home-Energy-Monitor-ESP32-CT-Sensor-Emonlib/
+
 
 // the setup function runs once when you press reset or power the board
 void setup()
