@@ -39,6 +39,43 @@ void sendToEMON(PZEM_004T_Sensor_t &PZEM004data)
         Serial.println("Post to emoncms : success");
     */
 
+
+
+// INFO                                                .
+THIS IS WORKING:
+http://192.168.0.194/emoncms/input/post.json?node=Test&apikey=1ce596688fc9a1e40d25d855a1336dad&json={Power:21.4,Current:4.25,Energy:7.7}
+
+BUT Current = 1   Power = 2    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+apikey is mandatory, otherwise only int (!) instead of float will be stored !!!
+
+
+better split messages in seperat "print" instead of char[] !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// {
+//     client.print("GET /input/post.json?json={power:200");  // make sure there is a [space] between GET and /input
+//     client.print(",realPower:");
+//     client.print(realPower);
+//     client.print(",apparentPower:");
+//     client.print(apparentPower);
+//     client.print(",PowerFActor:");
+//     client.print(PowerFActor);  
+//     client.print(",supplyVoltage:");
+//     client.print(supplyVoltage);
+//     client.print(",Irms:");
+//     client.print(Irms);  
+//     client.print("}&apikey="
+//     client.print(MYAPIKEY)         //assuming MYAPIKEY is a char or string
+//     client.println(" HTTP/1.1");   //make sure there is a [space] BEFORE the HTTP
+//     client.println(F("Host: emoncms.org"));
+//     client.print(F("User-Agent: Arduino-ethernet"));
+//     client.println(F("Connection: close"));     //    Although not technically necessary, I found this helpful
+//     client.println();
+// }
+ 
+
+
+
     char msg[256] = {'\0'};
     snprintf(msg,
              sizeof(msg),
