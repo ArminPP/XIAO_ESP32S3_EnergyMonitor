@@ -39,12 +39,13 @@ void doWebserver(Client &client, PZEM_004T_Sensor_t &PZEM004data)
                         client.print("<center><h1 style=\"font-size:4vw;\"><br>Welcome to EnergyMonitor V0.2 BETA</h1></center>");
                         client.println("<br>");
                         client.println("<br>");
-                        client.printf("<center><h2 style=\"font-size:2vw;\">Power: %5.2f&deg;C</h2></center>", PZEM004data.Power);
-                        client.printf("<center><h2 style=\"font-size:2vw;\">Current: %5.2f&deg;C</h2></center>", PZEM004data.Current);
-                        client.printf("<center><h2 style=\"font-size:2vw;\">Energy: %5.2f&deg;C</h2></center>", PZEM004data.Energy);
-                        client.printf("<center><h2 style=\"font-size:2vw;\">Frequency: %5.2f&deg;C</h2></center>", PZEM004data.Frequency);
-                        client.printf("<center><h2 style=\"font-size:2vw;\">Voltage: %5.2f&deg;C</h2></center>", PZEM004data.Voltage);
-                        client.printf("<center><h2 style=\"font-size:2vw;\">PowerFactor: %5.2f&deg;C</h2></center>", PZEM004data.PowerFactor);
+                        client.printf("<center><h2 style=\"font-size:2vw;\">Power: %5.2f W</h2></center>", PZEM004data.Power);
+                        client.printf("<center><h2 style=\"font-size:2vw;\">Current: %5.2f A</h2></center>", PZEM004data.Current);
+                        client.printf("<center><h2 style=\"font-size:2vw;\">Energy: %5.2f kWh</h2></center>", PZEM004data.Energy);
+                        client.printf("<center><h2 style=\"font-size:2vw;\">Frequency: %5.2f Hz</h2></center>", PZEM004data.Frequency);
+                        client.printf("<center><h2 style=\"font-size:2vw;\">Voltage: %5.2f V</h2></center>", PZEM004data.Voltage);
+                        client.printf("<center><h2 style=\"font-size:2vw;\">PowerFactor: %5.2f</h2></center>", PZEM004data.PowerFactor);
+                        client.println("<br>");
                         client.printf("<center><h2 style=\"font-size:2vw;\">rssi: %d</h2></center>", WiFi.RSSI());
 
                         uint16_t dd = 0;
@@ -85,6 +86,10 @@ void WiFiDisconnected(WiFiEvent_t event, WiFiEventInfo_t info)
 {
     // INFO    AFTER UPDATING ESP-ARDUINO TO 4.1.0 SOME WiFi Events are gone?!
     LOG(LOG_WARNING, "Disconnected from WiFi, reason: %i - trying to reconnect...", info.wifi_sta_connected); // info.disconnected.reason
+
+// DEBUG                O N L Y   T E S T
+    // WiFi.begin(Credentials::WIFI_SSID, Credentials::WIFI_PASSWORD); // , Credentials::ESP_NOW_CHANNEL
+
     WiFi.reconnect();
 }
 
@@ -118,6 +123,12 @@ void WiFiConnected(WiFiEvent_t event, WiFiEventInfo_t info)
     // INFO    AFTER UPDATING ESP-ARDUINO TO 4.1.0 SOME WiFi Events are gone?!
     LOG(LOG_INFO, "Channel:%i Auth mode:%i", info.wifi_sta_connected.channel, info.wifi_sta_connected.authmode);
     // LOG(LOG_INFO, "Channel:%i Auth mode:%i", info.connected.channel, info.connected.authmode);
+    WiFi.printDiag(Serial);
+
+    char bufIP[25] = {'\0'};
+    IPAddress ip   = WiFi.localIP();
+    sprintf(bufIP, "IP:   %d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
+    LOG(LOG_DEBUG, "local IP: %s", bufIP);
 
     // to early -> timeout at NTP fetch, delay needed?
     // getNtpTime(WiFiudp);
@@ -134,10 +145,10 @@ bool openAccessPoint(bool useDefaultValues)
     if (Credentials::AP_ENABLED || useDefaultValues) // NEW  if no settings file is detected, open AP!
     {
         LOG(LOG_DEBUG, "-------------------> AP");
-        WiFi.begin(); // start WiFi with no credentials
-        delay(500);
+        // WiFi.begin(); // start WiFi with no credentials
+        // delay(500);
 
-        APserver.begin(); // INFO    FOR AWOT <-------------------------
+        // APserver.begin(); // INFO    FOR AWOT <-------------------------
 
         // setting hostname in ESP32 always before setting the mode!
         // https://github.com/matthias-bs/BresserWeatherSensorReceiver/issues/19
@@ -176,6 +187,10 @@ bool openAccessPoint(bool useDefaultValues)
         LOG(LOG_INFO, "AP IP-Address:     %s", WiFi.softAPIP().toString().c_str());
         LOG(LOG_INFO, "AP MAC:            %s", WiFi.softAPmacAddress().c_str());
 
+        WiFi.begin(); // start WiFi with no credentials
+        delay(500);
+        APserver.begin(); // INFO    FOR AWOT <-------------------------
+
         if (Credentials::ENABLE_LOG_DEBUG)
         {
             WiFi.printDiag(Serial);
@@ -212,6 +227,22 @@ bool setupWIFI()
 
     // setting hostname in ESP32 always before setting the mode!
     // https://github.com/matthias-bs/BresserWeatherSensorReceiver/issues/19
+
+    if (Credentials::ENABLE_LOG_DEBUG)
+    {
+        Serial.println(F("----------------> before clear WiFI credentials"));
+        WiFi.printDiag(Serial);
+    }
+    WiFi.persistent(false);       // reset WiFi and erase credentials
+    WiFi.disconnect(false, true); // Wifi adapter off - not good! / delete ap values
+    WiFi.mode(WIFI_OFF);          // mode is off (no AP, STA, ...)
+    delay(500);
+    if (Credentials::ENABLE_LOG_DEBUG)
+    {
+        Serial.println(F("----------------> after clear WiFI credentials"));
+        WiFi.printDiag(Serial);
+    }
+
     WiFi.setHostname(Credentials::ESP_HOSTNAME); // TODO doesn't work?
 
     WiFi.mode(WIFI_MODE_STA); // WIFI_MODE_APSTA    // INFO!
@@ -273,12 +304,13 @@ bool setupWIFI()
     {
         Serial.println(F("----------------> after begin"));
         WiFi.printDiag(Serial);
+        LOG(LOG_INFO, "WiFi IP-Address:%s", WiFi.localIP().toString().c_str());
     }
 
     LOG(LOG_INFO, "connecting to WiFi");
 
     // WiFi timeout
-    int16_t timeout = 20; // 20 * 0.5 sec to connect to a WiFi, otherwise create an AP
+    int16_t timeout = 30; // 20 * 0.5 sec to connect to a WiFi, otherwise create an AP
 
     while (WiFi.status() != WL_CONNECTED && timeout > 0) // better timeout handling!
     {

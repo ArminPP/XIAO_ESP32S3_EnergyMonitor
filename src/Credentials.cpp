@@ -27,7 +27,7 @@ namespace Credentials // https://stackoverflow.com/questions/2483978/best-way-to
 
         // --- Mesurement ---
         // --- Communication Settings ---
-        bool AP_ENABLED = true;   // only for webserver (settings, fast measurement,...)
+        bool AP_ENABLED = false;   // only for webserver (settings, fast measurement,...)
         bool WIFI_ENABLED = true; // only for webserver (settings, fast measurement,...)
 
         // --- MESH ---
@@ -41,8 +41,8 @@ namespace Credentials // https://stackoverflow.com/questions/2483978/best-way-to
         char AP_STATIC_IP[25] = "10.0.0.15";
         char AP_STATIC_SN[25] = "255.255.255.0";
 
-        char WIFI_SSID[25] = "_WLAN_";
-        char WIFI_PASSWORD[25] = "";
+        char WIFI_SSID[25] = "OnePlus 6";
+        char WIFI_PASSWORD[25] = "FlapperSp0t";
         bool WIFI_DHCP = true;
         char WIFI_STATIC_IP[25] = "";
         char WIFI_STATIC_SN[25] = "";

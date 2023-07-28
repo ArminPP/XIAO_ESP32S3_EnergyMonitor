@@ -93,6 +93,9 @@ void loop()
 
         readPZEM004Data(PZEM004Data);
         sendToEMON(PZEM004Data);
+
+        // -------- EmonCmsLoop end ----------------------------------------------------------------
+        EmonCmsLoopPM = EmonCmsLoopCM;
     }
 
     doNetwork(PZEM004Data); // only webserver on Xiao!
@@ -108,9 +111,27 @@ void loop()
         else
         {
             digitalWrite(LED_BUILTIN, LOW); // turn the LED off
-
-            // -------- oneSecondLoop end ----------------------------------------------------------------
-            oneSecondLoopPM = oneSecondLoopCM;
         }
+
+        // -------- oneSecondLoop end ----------------------------------------------------------------
+        oneSecondLoopPM = oneSecondLoopCM;
+    }
+
+    const int CAPACITIVE_TOUCH_INPUT_PIN = GPIO_NUM_4; // GPIO pin 14
+    const int TOUCH_THRESHOLD            = 20;         // turn on light if touchRead value < this threshold
+
+    unsigned long startReadTimestamp = micros();
+    // By default, touchRead should take ~500 microseconds according to the ESP32 source code
+    // https://github.com/espressif/arduino-esp32/blob/a59eafbc9dfa3ce818c110f996eebf68d755be24/cores/esp32/esp32-hal-touch.h
+    // You can configure these settings using touchSetCycles
+    int touchVal              = touchRead(CAPACITIVE_TOUCH_INPUT_PIN);
+    unsigned long elapsedTime = micros() - startReadTimestamp;
+    boolean ledOn             = false;
+xxx
+    // Turn on LED if touchRead value drops below threshold
+    if (touchVal < TOUCH_THRESHOLD)
+    {
+        ledOn = true;
+        Serial.println((String)touchVal + ", " + elapsedTime + " microseconds, LED " + ledOn);
     }
 }
