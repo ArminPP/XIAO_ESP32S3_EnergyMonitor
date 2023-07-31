@@ -4,12 +4,12 @@
 #include "WiFi.h"
 
 // Replace with your network credentials
-const char *ssid     = "_WLAN_";
-const char *password = "";
+const char *ssid     = "_WAN_";
+const char *password = "PSoUrG(/&$*K";
 
 void initWiFi()
 {
-     WiFi.setMinSecurity(WIFI_AUTH_WEP);   // WIFI_AUTH_OPEN is the minimum
+    // WiFi.setMinSecurity(WIFI_AUTH_WEP); // WIFI_AUTH_OPEN is the minimum
     WiFi.mode(WIFI_STA);
     WiFi.begin(ssid, password);
     Serial.print("Connecting to WiFi ..");
@@ -19,6 +19,8 @@ void initWiFi()
         delay(1000);
     }
     Serial.println();
+    Serial.println();
+    Serial.println("LocalIP: ");
     Serial.println(WiFi.localIP());
 }
 

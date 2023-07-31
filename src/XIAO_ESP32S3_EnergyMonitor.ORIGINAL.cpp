@@ -67,7 +67,7 @@ void setup()
     pinMode(LED_BUILTIN, OUTPUT);
     Serial.begin(115200);
     delay(2000); // delay is mandatory with Xiao ESP32S3 ?!
-    Serial.printf("Welcome to %s", ___FILENAME___);
+    Serial.printf("Welcome to %s\n", ___FILENAME___);
     delay(1000);
 
     ESP32sysInfo();
@@ -127,9 +127,9 @@ void loop()
     int touchVal              = touchRead(CAPACITIVE_TOUCH_INPUT_PIN);
     unsigned long elapsedTime = micros() - startReadTimestamp;
     boolean ledOn             = false;
-xxx
+// xxx
 
-ANDERES TERMINAL PROGRAMM FÜR UB DOWNLOADEN!!!!
+
     // Turn on LED if touchRead value drops below threshold
     if (touchVal < TOUCH_THRESHOLD)
     {

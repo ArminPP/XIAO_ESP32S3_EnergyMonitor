@@ -87,7 +87,7 @@ void WiFiDisconnected(WiFiEvent_t event, WiFiEventInfo_t info)
     // INFO    AFTER UPDATING ESP-ARDUINO TO 4.1.0 SOME WiFi Events are gone?!
     LOG(LOG_WARNING, "Disconnected from WiFi, reason: %i - trying to reconnect...", info.wifi_sta_connected); // info.disconnected.reason
 
-// DEBUG                O N L Y   T E S T
+    // DEBUG                O N L Y   T E S T
     // WiFi.begin(Credentials::WIFI_SSID, Credentials::WIFI_PASSWORD); // , Credentials::ESP_NOW_CHANNEL
 
     WiFi.reconnect();
@@ -223,33 +223,29 @@ bool setupWIFI()
     }                                                     // scanning for AP's  <----<<
     */
 
-    // Beep(); // INFO function doesn't work with core2!
-
-    // setting hostname in ESP32 always before setting the mode!
-    // https://github.com/matthias-bs/BresserWeatherSensorReceiver/issues/19
-
-    if (Credentials::ENABLE_LOG_DEBUG)
-    {
-        Serial.println(F("----------------> before clear WiFI credentials"));
-        WiFi.printDiag(Serial);
-    }
     WiFi.persistent(false);       // reset WiFi and erase credentials
     WiFi.disconnect(false, true); // Wifi adapter off - not good! / delete ap values
     WiFi.mode(WIFI_OFF);          // mode is off (no AP, STA, ...)
     delay(500);
+
     if (Credentials::ENABLE_LOG_DEBUG)
     {
-        Serial.println(F("----------------> after clear WiFI credentials"));
+        Serial.println(F("after clearing WiFI credentials"));
         WiFi.printDiag(Serial);
     }
 
-    WiFi.setHostname(Credentials::ESP_HOSTNAME); // TODO doesn't work?
+    // setting hostname in ESP32 always before setting the mode!
+    // https://github.com/matthias-bs/BresserWeatherSensorReceiver/issues/19
+    WiFi.setHostname(Credentials::ESP_HOSTNAME);
 
-    WiFi.mode(WIFI_MODE_STA); // WIFI_MODE_APSTA    // INFO!
+    WiFi.mode(WIFI_MODE_STA);
 
     WiFi.onEvent(WiFiDisconnected, ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
     WiFi.onEvent(WiFiConnected, ARDUINO_EVENT_WIFI_STA_CONNECTED);
-    // WiFi.onEvent(WiFiGotIP, SYSTEM_EVENT_STA_GOT_IP);  // TODO    to much messages?!
+    // INFO       This delay is mandatory after WiFi.onEvent() callbacks!        .
+    // INFO       Maybe the CB are needing time to settle ?!                     .
+    // INFO       Without the delay, Error "WiFi shield was not found" appears !!!
+    delay(1000);
 
     if (Credentials::WIFI_DHCP) // WIFI_DHCP is selected
     {
