@@ -19,10 +19,9 @@ void sendToEMON(PZEM_004T_Sensor_t &PZEM004data)
 
     // Use WiFiClient class to create TCP connections
     WiFiClient client;
-    const int httpPort = 80;
-    if (!client.connect(EmonHost, httpPort))
+    if (!client.connect(Credentials::EMONCMS_HOST, Credentials::EMONCMS_PORT, Credentials::EMONCMS_TIMEOUT))
     {
-        LOG(LOG_ERROR, "EmonCMS connection failed: %s|%i", EmonHost, httpPort);
+        LOG(LOG_ERROR, "EmonCMS connection failed: %s|%i", Credentials::EMONCMS_HOST, Credentials::EMONCMS_PORT);
         LOG(LOG_INFO, "WiFi IP-Address:%s", WiFi.localIP().toString().c_str());
         return;
     }
@@ -33,9 +32,9 @@ void sendToEMON(PZEM_004T_Sensor_t &PZEM004data)
 
     client.print("GET /emoncms/input/post.json"); // make sure there is a [space] between GET and /input
     client.print("?node=");
-    client.print(EmonNodeID);
-    client.print("&apikey="); // apikey is mandatory, otherwise only
-    client.print(EmonApiKey); // integer (!) instead of float will be stored !!!
+    client.print(Credentials::EMONCMS_NODE_ID);
+    client.print("&apikey=");                   // apikey is mandatory, otherwise only
+    client.print(Credentials::EMONCMS_API_KEY); // integer (!) instead of float will be stored !!!
     client.print("&json={");
     client.print("1"); // tagname of Current in old EmonCMS
     client.print(PZEM004data.Current);
@@ -52,7 +51,7 @@ void sendToEMON(PZEM_004T_Sensor_t &PZEM004data)
     client.print("}");
     client.println(" HTTP/1.1"); // make sure there is a [space] BEFORE the HTTP
     client.print(F("Host: "));
-    client.println(EmonHost);
+    client.println(Credentials::EMONCMS_HOST);
     // client.print(F("User-Agent: ESP32-Wifi"));
     client.println(F("Connection: close")); //    Although not technically necessary, I found this helpful
     client.println();

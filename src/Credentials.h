@@ -42,43 +42,51 @@ enum LogMsgType
 
 namespace Credentials // https://stackoverflow.com/questions/2483978/best-way-to-implement-globally-scoped-data
 {
-    // --- Global ---
-    extern bool RESTART_ESP;    // not stored in aWOT, only global var!
-    extern bool USE_DEEP_SLEEP; //
+// --- Global ---
+extern bool RESTART_ESP;    // not stored in aWOT, only global var!
+extern bool USE_DEEP_SLEEP; //
 
-    // --- Logfile ---
-    extern bool LOG_TO_SERIAL;
+// --- Logfile ---
+extern bool LOG_TO_SERIAL;
 
-    extern bool ENABLE_LOG_DEBUG;
-    extern bool ENABLE_LOG_ERROR;
-    extern bool ENABLE_LOG_WARNING;
-    extern bool ENABLE_LOG_INFO;
+extern bool ENABLE_LOG_DEBUG;
+extern bool ENABLE_LOG_ERROR;
+extern bool ENABLE_LOG_WARNING;
+extern bool ENABLE_LOG_INFO;
 
-    // --- Mesurement ---
+// --- Mesurement ---
 
-    // --- Communication Settings ---
-    extern bool AP_ENABLED;   // only for webserver (settings, fast measurement,...)
-    extern bool WIFI_ENABLED; // only for webserver (settings, fast measurement,...)
+// --- Communication Settings ---
+extern bool AP_ENABLED;   // only for webserver (settings, fast measurement,...)
+extern bool WIFI_ENABLED; // only for webserver (settings, fast measurement,...)
 
-    // --- MESH ---
+// --- MESH ---
 
-    // --- MODBUS ---
+// --- MODBUS ---
 
-    // --- Network ---
-    extern char ESP_HOSTNAME[35];
+// --- EMONCMS ---
+extern char EMONCMS_HOST[25];
+extern uint16_t EMONCMS_PORT;
+extern char EMONCMS_NODE_ID[25];
+extern char EMONCMS_API_KEY[35];         
+extern uint16_t EMONCMS_LOOP_TIME; // SECONDS!
+extern uint32_t EMONCMS_TIMEOUT; // MS
 
-    extern char AP_SSID[25];
-    extern char AP_PASSWORD[25]; // minimum 8 chars (Android!)
-    extern char AP_STATIC_IP[25];
-    extern char AP_STATIC_SN[25];
+// --- Network ---
+extern char ESP_HOSTNAME[35];
 
-    extern char WIFI_SSID[25];
-    extern char WIFI_PASSWORD[25];
-    extern bool WIFI_DHCP;
-    extern char WIFI_STATIC_IP[25];
-    extern char WIFI_STATIC_SN[25];
-    extern char WIFI_STATIC_GW[25];
-    extern char WIFI_STATIC_DNS[25];
-}
+extern char AP_SSID[25];
+extern char AP_PASSWORD[25]; // minimum 8 chars (Android!)
+extern char AP_STATIC_IP[25];
+extern char AP_STATIC_SN[25];
+
+extern char WIFI_SSID[25];
+extern char WIFI_PASSWORD[25];
+extern bool WIFI_DHCP;
+extern char WIFI_STATIC_IP[25];
+extern char WIFI_STATIC_SN[25];
+extern char WIFI_STATIC_GW[25];
+extern char WIFI_STATIC_DNS[25];
+} // namespace Credentials
 
 #endif // CREDENTIALS_H_

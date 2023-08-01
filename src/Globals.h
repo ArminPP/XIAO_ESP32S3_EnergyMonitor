@@ -19,10 +19,10 @@ extern const char *SETTINGS_FILENAME; // LittleFS - must not be set in web serve
 extern const uint16_t SCHEDULER_LOOP; // 1000ms - main loop of the scheduler (read temperatures and so on...)
 
 // EmonCMS Settings
-extern const char *EmonHost;
-extern const char *EmonNodeID;
-extern const char *EmonApiKey;
-extern const uint16_t EMONCMS_LOOP_TIME;
+// extern const char *Credentials::EMONCMS_HOST;
+// extern const char *Credentials::EMONCMS_NODE_ID;
+// extern const char *Credentials::EMONCMS_API_KEY;
+// extern const uint16_t EMONCMS_LOOP_TIME;
 
 // PZEM-004T data
 

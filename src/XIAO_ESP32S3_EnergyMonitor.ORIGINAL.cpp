@@ -6,6 +6,7 @@
 #include "Communication.h"
 #include "Tools.h"
 #include "Network.h"
+#include "ProfileTimer.h"
 
 /*
 // INFO                      Xiao ESp32S3                                         .
@@ -36,21 +37,27 @@ Modification if PZEM004Tv30 from 5V TTL to 3.V TTL is NOT needed!
 #define PZEM_TX_PIN GPIO_NUM_43 // --> RX PIN OF PZEM
 #define PZEM_SERIAL Serial2
 
-// This device communicates only if 240VAC is connested!!
+// This device communicates only if 240VAC is connected!!
 PZEM004Tv30 pzem(PZEM_SERIAL, PZEM_RX_PIN, PZEM_TX_PIN);
 
 // **********************************************************************
 // read all data from PZEM-004T
+// INFO  reading of PZEM-004T takes ~600ms in BLOCKING mode        !!!!!!
 // **********************************************************************
 void readPZEM004Data(PZEM_004T_Sensor_t &PZEM004data)
 {
-    PZEM004data.Voltage     = pzem.voltage();
-    PZEM004data.Current     = pzem.current();
-    PZEM004data.Power       = pzem.power();
-    PZEM004data.Energy      = pzem.energy();
-    PZEM004data.Frequency   = pzem.frequency();
-    PZEM004data.PowerFactor = pzem.pf();
+    {
+        // tests if value is "Nan" (then set to 0.0) or a valid float ...
+        // generates "Nan" for testing ==>  float voltage = float(sqrt(-2.0));
+        PZEM004data.Voltage     = isnan(pzem.voltage()) ? 0.0 : pzem.voltage();
+        PZEM004data.Current     = isnan(pzem.current()) ? 0.0 : pzem.current();
+        PZEM004data.Power       = isnan(pzem.power()) ? 0.0 : pzem.power();
+        PZEM004data.Energy      = isnan(pzem.energy()) ? 0.0 : pzem.energy();
+        PZEM004data.Frequency   = isnan(pzem.frequency()) ? 0.0 : pzem.frequency();
+        PZEM004data.PowerFactor = isnan(pzem.pf()) ? 0.0 : pzem.pf();
 
+        ProfileTimer tt("read PZEM004_1");
+    }
     LOG(LOG_DEBUG,
         "PZEM_004T   Voltage: %.2f V | Current %.2f A  | Power %.2f W  | Energy %.2f kWh  | Frequency %.2f Hz  | PowerFactor %.2f",
         PZEM004data.Voltage,
@@ -87,7 +94,7 @@ void loop()
 
     static unsigned long EmonCmsLoopPM = 0;
     unsigned long EmonCmsLoopCM        = millis();
-    if (EmonCmsLoopCM - EmonCmsLoopPM >= (EMONCMS_LOOP_TIME * ONE_SECOND))
+    if (EmonCmsLoopCM - EmonCmsLoopPM >= (Credentials::EMONCMS_LOOP_TIME * ONE_SECOND))
     {
         // Read the data from the sensor
 
@@ -104,6 +111,16 @@ void loop()
     unsigned long oneSecondLoopCM        = millis();
     if (oneSecondLoopCM - oneSecondLoopPM >= (1 * ONE_SECOND))
     {
+        // Serial.println("Touch1 " + (String)touchRead(TOUCH_PAD_NUM1));
+        // Serial.println("Touch2 " + (String)touchRead(TOUCH_PAD_NUM2));
+        // Serial.println("Touch3 " + (String)touchRead(TOUCH_PAD_NUM3));
+        // Serial.println("Touch4 " + (String)touchRead(TOUCH_PAD_NUM4));
+        // Serial.println("Touch5 " + (String)touchRead(TOUCH_PAD_NUM5));
+        // Serial.println("Touch6 " + (String)touchRead(TOUCH_PAD_NUM6));
+        // Serial.println("Touch7 " + (String)touchRead(TOUCH_PAD_NUM7));
+        // Serial.println("Touch8 " + (String)touchRead(TOUCH_PAD_NUM8));
+        // Serial.println("Touch9 " + (String)touchRead(TOUCH_PAD_NUM9));
+
         if ((blink = !blink))
         {
             digitalWrite(LED_BUILTIN, HIGH); // turn the LED on
@@ -117,23 +134,30 @@ void loop()
         oneSecondLoopPM = oneSecondLoopCM;
     }
 
-    const int CAPACITIVE_TOUCH_INPUT_PIN = GPIO_NUM_4; // GPIO pin 14
-    const int TOUCH_THRESHOLD            = 20;         // turn on light if touchRead value < this threshold
+    // INFO  TOUCH ESP32 != ESP32S3 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // Actually, the touch sensor on ESP32-S2 and ESP32-S3 adopts an opposite way to measure the capacity,
+    // they will fixed the count of charge and discharge cycles and then record the count of the
+    // clock cycles during the sensing period.
+    // https://github.com/espressif/esp-idf/issues/9067#issuecomment-1143073486
 
-    unsigned long startReadTimestamp = micros();
-    // By default, touchRead should take ~500 microseconds according to the ESP32 source code
-    // https://github.com/espressif/arduino-esp32/blob/a59eafbc9dfa3ce818c110f996eebf68d755be24/cores/esp32/esp32-hal-touch.h
-    // You can configure these settings using touchSetCycles
-    int touchVal              = touchRead(CAPACITIVE_TOUCH_INPUT_PIN);
-    unsigned long elapsedTime = micros() - startReadTimestamp;
-    boolean ledOn             = false;
-// xxx
+    const uint32_t TOUCH_THRESHOLD    = 40000;
+    const uint16_t ButtonPress        = 300;
+    static boolean TriggerOnce        = false;
+    static unsigned long previousTime = 0;
+    unsigned long currentTime         = millis();
 
-
-    // Turn on LED if touchRead value drops below threshold
-    if (touchVal < TOUCH_THRESHOLD)
+    int touchVal = touchRead(TOUCH_PAD_NUM9);
+    if (touchVal > TOUCH_THRESHOLD)
     {
-        ledOn = true;
-        Serial.println((String)touchVal + ", " + elapsedTime + " microseconds, LED " + ledOn);
+        if (currentTime - previousTime >= ButtonPress && !TriggerOnce)
+        {
+            Serial.println((String)touchVal + " ####################### PRESSED! ");
+            TriggerOnce  = true; // activate trigger after button press is detected
+            previousTime = currentTime;
+        }
+    }
+    else
+    {
+        TriggerOnce = false; // after releasing the button, reset trigger for new button press event
     }
 }

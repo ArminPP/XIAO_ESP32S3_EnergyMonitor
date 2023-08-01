@@ -33,6 +33,14 @@ bool WIFI_ENABLED = true;  // only for webserver (settings, fast measurement,...
 // --- MESH ---
 // --- MODBUS ---
 
+// --- EMONCMS ---
+char EMONCMS_HOST[25]      = "192.168.0.194";
+uint16_t EMONCMS_PORT      = 80;
+char EMONCMS_NODE_ID[25]   = "PowerDuino";
+char EMONCMS_API_KEY[35]   = "1ce596688fc9a1e40d25d855a1336dad"; // Your RW apikey
+uint16_t EMONCMS_LOOP_TIME = 5;                                  // SECONDS!
+uint32_t EMONCMS_TIMEOUT   = 1500;                               // MS
+
 // --- Network ---
 char ESP_HOSTNAME[35] = "Xiao_PowerMeter";
 
