@@ -306,7 +306,7 @@ bool setupWIFI()
     LOG(LOG_INFO, "connecting to WiFi");
 
     // WiFi timeout
-    int16_t timeout = 30; // 20 * 0.5 sec to connect to a WiFi, otherwise create an AP
+    int16_t timeout = 20; // 20 * 0.5 sec to connect to a WiFi, otherwise create an AP
 
     while (WiFi.status() != WL_CONNECTED && timeout > 0) // better timeout handling!
     {

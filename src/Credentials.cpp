@@ -49,10 +49,8 @@ char AP_PASSWORD[25]  = "sdvK30t9zI%"; // minimum 8 chars (Android!)
 char AP_STATIC_IP[25] = "10.0.0.15";
 char AP_STATIC_SN[25] = "255.255.255.0";
 
-// char WIFI_SSID[25] = "OnePlus 6";
-// char WIFI_PASSWORD[25] = "FlapperSp0t";
-char WIFI_SSID[25]       = "wappler";
-char WIFI_PASSWORD[25]   = "lsakgh(/&$311o";
+char WIFI_SSID[25]       = "_WLAN_";
+char WIFI_PASSWORD[25]   = "";
 bool WIFI_DHCP           = true;
 char WIFI_STATIC_IP[25]  = "";
 char WIFI_STATIC_SN[25]  = "";

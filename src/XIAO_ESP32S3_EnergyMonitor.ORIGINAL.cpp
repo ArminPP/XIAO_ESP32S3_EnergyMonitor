@@ -37,6 +37,21 @@ Modification if PZEM004Tv30 from 5V TTL to 3.V TTL is NOT needed!
 #define PZEM_TX_PIN GPIO_NUM_43 // --> RX PIN OF PZEM
 #define PZEM_SERIAL Serial2
 
+enum BlinkingStyle
+{
+    BS_normalBlink,
+    BS_noBlink,
+    BS_fastBlink,
+    BS_slowBlink
+};
+
+void doLedBlink(uint8_t LedPin, BlinkingStyle BS = BS_normalBlink, uint32_t BlinkingSpeed_ms = ONE_SECOND); // blink with default values
+
+// Touch button settings
+uint16_t ButtonThreshold = 1500; // ESP32S2
+bool ButtonResetEnergy   = false;
+uint8_t ButtonResetPin   = TOUCH_PAD_NUM9;
+
 // This device communicates only if 240VAC is connected!!
 PZEM004Tv30 pzem(PZEM_SERIAL, PZEM_RX_PIN, PZEM_TX_PIN);
 
@@ -68,19 +83,104 @@ void readPZEM004Data(PZEM_004T_Sensor_t &PZEM004data)
         PZEM004data.PowerFactor);
 }
 
+// **********************************************************************
+// in main loop the led blinks with default freuency as a heart beat (eg. 1s)
+// blinks the internal LED for a specific time very fast
+// **********************************************************************
+void doLedBlink(uint8_t LedPin, BlinkingStyle BS, uint32_t BSpeed_ms)
+{
+    static boolean blink               = true;
+    static boolean NoBlink             = false;
+    static boolean FastSlowBlink       = false;
+    static uint16_t BlinkCounter_s     = 0;
+    static uint16_t BlinkingDuration_s = 0;
+    static uint32_t BlinkingSpeed_ms   = 0;
+
+    static unsigned long BlinkLoopPM = 0;
+    unsigned long BlinkLoopCM        = millis();
+
+    if (!FastSlowBlink) // only if FastSlowBlink is not set, switch to default!
+    {
+        BlinkingSpeed_ms = BSpeed_ms; // set default, noBlink and normalBlink need both 1 second blinking
+    }
+
+    // BS and BSpeed_ms are dynamic vars, once the function is called
+    // they will are gone to the default values during the next loop cycle.
+    // So the values are stored to static vars and after a specific time
+    // (BlinkingDuration_s) everything will switch back to their defaults.
+    if (BS == BS_noBlink)
+    {
+        NoBlink            = true;
+        BlinkingDuration_s = 5;
+    }
+    else if (BS == BS_fastBlink)
+    {
+        FastSlowBlink      = true;
+        BlinkingSpeed_ms   = 100;
+        BlinkingDuration_s = 5 * 10; // duration * related to 1 second
+    }
+    else if (BS == BS_slowBlink)
+    {
+        FastSlowBlink      = true;
+        BlinkingSpeed_ms   = 2000;
+        BlinkingDuration_s = 5; // blink x-times in slow mode
+    }
+
+    if (NoBlink || FastSlowBlink) // switch to "notNormal" mode
+    {
+        // Serial.println("****************************      NoBlink triggered");
+        // trigger the no blink event
+        if (BlinkCounter_s >= BlinkingDuration_s) // if duration is reached..
+        {                                         //
+            NoBlink          = false;             // stop the light
+            FastSlowBlink    = false;
+            BlinkingSpeed_ms = BSpeed_ms; // back to default
+            BlinkCounter_s   = 0;
+            LOG(LOG_INFO, "NoBlink end");
+        }
+    }
+
+    if (BlinkLoopCM - BlinkLoopPM >= BlinkingSpeed_ms)
+    {
+        if ((blink = !blink) || NoBlink)
+        {
+            digitalWrite(LedPin, LOW);    // turn the LED on (chek if LOW==On or HIGH==ON!!)
+            if (NoBlink || FastSlowBlink) // only if not normal Blink than count
+            {
+                BlinkCounter_s++;
+                LOG(LOG_DEBUG, "BlinkCounter_s %i | Duration_s %i | BlinkingSpeed_ms %i", BlinkCounter_s, BlinkingDuration_s, BlinkingSpeed_ms);
+            }
+        }
+        else
+        {
+            digitalWrite(LedPin, HIGH); // turn the LED off
+        }
+        // -------- BlinkLoop end ----------------------------------------------------------------
+        BlinkLoopPM = BlinkLoopCM;
+    }
+}
+
+void Button1()
+{
+    // for each interrupt a button function
+    ButtonResetEnergy = true;
+}
+
 void setup()
 {
+    Serial.begin(115200);
     // initialize digital pin LED_BUILTIN as an output.
     pinMode(LED_BUILTIN, OUTPUT);
-    Serial.begin(115200);
+
+    touchAttachInterrupt(ButtonResetPin, Button1, ButtonThreshold); // energy reset button
+
     delay(2000); // delay is mandatory with Xiao ESP32S3 ?!
-    Serial.printf("Welcome to %s\n", ___FILENAME___);
+    LOG(LOG_INFO, "Welcome to %s\n", ___FILENAME___);
     delay(1000);
 
     ESP32sysInfo();
 
-    Serial.print("PZEM004Tv30 Address: ");
-    Serial.println(pzem.readAddress(), HEX);
+    LOG(LOG_INFO, "PZEM004Tv30 Address: %02X", pzem.readAddress()); // HEX address
 
     setupNetwork();
 }
@@ -88,8 +188,6 @@ void setup()
 // the loop function runs over and over again forever
 void loop()
 {
-    static bool blink = true;
-
     PZEM_004T_Sensor_t PZEM004Data;
 
     static unsigned long EmonCmsLoopPM = 0;
@@ -97,7 +195,6 @@ void loop()
     if (EmonCmsLoopCM - EmonCmsLoopPM >= (Credentials::EMONCMS_LOOP_TIME * ONE_SECOND))
     {
         // Read the data from the sensor
-
         readPZEM004Data(PZEM004Data);
         sendToEMON(PZEM004Data);
 
@@ -105,130 +202,57 @@ void loop()
         EmonCmsLoopPM = EmonCmsLoopCM;
     }
 
-    doNetwork(PZEM004Data); // only webserver on Xiao!
+    doNetwork(PZEM004Data);  // only webserver on Xiao!
+    doLedBlink(LED_BUILTIN); // default blinking
 
-    static unsigned long oneSecondLoopPM = 0;
-    unsigned long oneSecondLoopCM        = millis();
-    if (oneSecondLoopCM - oneSecondLoopPM >= (1 * ONE_SECOND))
+    if (ButtonResetEnergy)
     {
-        // Serial.println("Touch1 " + (String)touchRead(TOUCH_PAD_NUM1));
-        // Serial.println("Touch2 " + (String)touchRead(TOUCH_PAD_NUM2));
-        // Serial.println("Touch3 " + (String)touchRead(TOUCH_PAD_NUM3));
-        // Serial.println("Touch4 " + (String)touchRead(TOUCH_PAD_NUM4));
-        // Serial.println("Touch5 " + (String)touchRead(TOUCH_PAD_NUM5));
-        // Serial.println("Touch6 " + (String)touchRead(TOUCH_PAD_NUM6));
-        // Serial.println("Touch7 " + (String)touchRead(TOUCH_PAD_NUM7));
-        // Serial.println("Touch8 " + (String)touchRead(TOUCH_PAD_NUM8));
-        // Serial.println("Touch9 " + (String)touchRead(TOUCH_PAD_NUM9));
-
-        if ((blink = !blink))
+        ButtonResetEnergy = false;
+        if (touchInterruptGetLastStatus(ButtonResetPin))
         {
-            digitalWrite(LED_BUILTIN, HIGH); // turn the LED on
+            if (pzem.resetEnergy())
+            {
+                LOG(LOG_INFO, "Reset PZEM-004 energy readings was succesful");
+                doLedBlink(LED_BUILTIN, BS_noBlink); // LED on for 5 seconds
+            }
+            else
+            {
+                LOG(LOG_ERROR, "Reset PZEM-004 energy readings not succesful!");
+                doLedBlink(LED_BUILTIN, BS_fastBlink); // LED flashes fast for 5 seconds
+            }
         }
         else
         {
-            digitalWrite(LED_BUILTIN, LOW); // turn the LED off
+            // LOG(LOG_DEBUG, "Button reset energy released");
         }
-
-        // -------- oneSecondLoop end ----------------------------------------------------------------
-        oneSecondLoopPM = oneSecondLoopCM;
     }
 
+    /*
     // INFO  TOUCH ESP32 != ESP32S3 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // Actually, the touch sensor on ESP32-S2 and ESP32-S3 adopts an opposite way to measure the capacity,
     // they will fixed the count of charge and discharge cycles and then record the count of the
     // clock cycles during the sensing period.
     // https://github.com/espressif/esp-idf/issues/9067#issuecomment-1143073486
 
-    const uint32_t TOUCH_THRESHOLD    = 40000;
-    const uint16_t ButtonPress        = 300;
-    static boolean TriggerOnce        = false;
-    static unsigned long previousTime = 0;
-    unsigned long currentTime         = millis();
+        const uint32_t TOUCH_THRESHOLD    = 40000;
+        const uint16_t ButtonPress        = 300;
+        static boolean TriggerOnce        = false;
+        static unsigned long previousTime = 0;
+        unsigned long currentTime         = millis();
 
-    int touchVal = touchRead(TOUCH_PAD_NUM9);
-    if (touchVal > TOUCH_THRESHOLD)
-    {
-        if (currentTime - previousTime >= ButtonPress && !TriggerOnce)
+        int touchVal = touchRead(TOUCH_PAD_NUM9);
+        if (touchVal > TOUCH_THRESHOLD)
         {
-            Serial.println((String)touchVal + " ####################### PRESSED! ");
-            TriggerOnce  = true; // activate trigger after button press is detected
-            previousTime = currentTime;
+            if (currentTime - previousTime >= ButtonPress && !TriggerOnce)
+            {
+                Serial.println((String)touchVal + " ####################### PRESSED! ");
+                TriggerOnce  = true; // activate trigger after button press is detected
+                previousTime = currentTime;
+            }
         }
-    }
-    else
-    {
-        TriggerOnce = false; // after releasing the button, reset trigger for new button press event
-    }
-}
-xxx
-
-/*
-
-This is an example how to use Touch Intrrerupts
-The sketh will tell when it is touched and then relesased as like a push-button
-
-This method based on touchInterruptGetLastStatus() is only available for ESP32 S2 and S3
-*/
-
-#include "Arduino.h"
-
-int threshold = 1500;   // ESP32S2 
-bool touch1detected = false;
-bool touch2detected = false;
-
-void gotTouch1() {
-  touch1detected = true;
-}
-
-void gotTouch2() {
-  touch2detected = true;
-}
-
-void setup() {
-  Serial.begin(115200);
-  delay(1000); // give me time to bring up serial monitor
-
-  Serial.println("\n ESP32 Touch Interrupt Test\n");
-  touchAttachInterrupt(T1, gotTouch1, threshold); 
-  touchAttachInterrupt(T2, gotTouch2, threshold);
-}
-
-void loop() {
-  if (touch1detected) {
-    touch1detected = false;
-    if (touchInterruptGetLastStatus(T1)) {
-        Serial.println(" --- T1 Touched");
-    } else {
-        Serial.println(" --- T1 Released");
-    }
-  }
-  if (touch2detected) {
-    touch2detected = false;
-    if (touchInterruptGetLastStatus(T2)) {
-        Serial.println(" --- T2 Touched");
-    } else {
-        Serial.println(" --- T2 Released");
-    }
-  }
-
-  delay(80);
-}
-
-####################################################################################
-
-//Simple sketch to access the internal hall effect detector on the esp32.
-//values can be quite low. 
-//Brian Degger / @sctv  
-int val = 0;
-void setup() {
-  Serial.begin(9600);
-    }
-
-void loop() {
-  // put your main code here, to run repeatedly:
-  val = hallRead();
-  // print the results to the serial monitor:
-  //Serial.print("sensor = ");
-  Serial.println(val);//to graph 
+        else
+        {
+            TriggerOnce = false; // after releasing the button, reset trigger for new button press event
+        }
+    */
 }
