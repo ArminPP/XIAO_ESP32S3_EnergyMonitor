@@ -34,10 +34,10 @@ bool WIFI_ENABLED = true;  // only for webserver (settings, fast measurement,...
 // --- MODBUS ---
 
 // --- EMONCMS ---
-char EMONCMS_HOST[25]      = "192.168.0.194";
+char EMONCMS_HOST[25]      = "192.168.0.xxx";
 uint16_t EMONCMS_PORT      = 80;
-char EMONCMS_NODE_ID[25]   = "PowerDuino";
-char EMONCMS_API_KEY[35]   = "1ce596688fc9a1e40d25d855a1336dad"; // Your RW apikey
+char EMONCMS_NODE_ID[25]   = "SolarDuino";
+char EMONCMS_API_KEY[35]   = ""; // Your RW apikey
 uint16_t EMONCMS_LOOP_TIME = 5;                                  // SECONDS!
 uint32_t EMONCMS_TIMEOUT   = 1500;                               // MS
 
@@ -49,7 +49,7 @@ char AP_PASSWORD[25]  = "sdvK30t9zI%"; // minimum 8 chars (Android!)
 char AP_STATIC_IP[25] = "10.0.0.15";
 char AP_STATIC_SN[25] = "255.255.255.0";
 
-char WIFI_SSID[25]       = "_WLAN_";
+char WIFI_SSID[25]       = "";
 char WIFI_PASSWORD[25]   = "";
 bool WIFI_DHCP           = true;
 char WIFI_STATIC_IP[25]  = "";
